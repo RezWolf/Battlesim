@@ -1,0 +1,353 @@
+#include<stdio.h>
+#include<stdlib.h>
+#include<ctype.h>
+
+#define MAXHEALTH 100       // max player health
+
+typedef enum {miss=0, hit} attStatus;
+
+typedef struct
+       {char name[25];      // Name
+        int health;         // Heatlh points
+        int armorType;      // Armor type
+        int armorPoints;    // Armor points
+        int wpn1Type;       // Weapon type
+        int wpn1Hit;        // Critical break value
+       } charType;
+
+typedef struct              // structure for the armor
+       {char *name;         //armor name
+        int strength;       //strength of the armor
+       } armorType;
+
+typedef struct              // structure for the weapon
+       {char *name;         //weapon name
+        int strength;       //weapon damage
+        int hitProb;        //hit probability for the weapon
+       } wepnType;       
+
+void missQuote()            //quotes if player misses
+{
+
+switch ( rollDie(5,1) )     //roll one five-sided dice
+ {
+  case 1:   printf("A miss? Thinking of that serving wench, eh?\n");
+            break;
+  case 2:   printf("Swing and a miss!\n");
+            break;
+  case 3:   printf("Keep your eyes on the prize, you whiffed that one.\n");
+            break;
+  case 4:   printf("No!  Do, or do not.  There is no try.\n");
+            break;
+  case 5:   printf("You are supposed to split him in half, not split the air.\n");
+ }
+}
+
+void duckQuote()           //quotes if enemy misses
+{
+
+switch ( rollDie(5,1) )    //roll one five-sided dice
+ {
+  case 1:   printf("A miss? Thanking your good fortune, eh?\n");
+            break;
+  case 2:   printf("Swing and a miss!\n");
+            break;
+  case 3:   printf("Ducked another one.\n");
+            break;
+  case 4:   printf("Go ahead, egg him on!  He can do better than that.\n");
+            break;
+  case 5:   printf("His blade glances off your thick skull.\n");
+ }
+}
+
+void hitQuote()                   //quotes if player gets hit
+{
+
+ switch ( rollDie(5,1) )          //roll one five-sided dice
+ {
+   case 1: printf("Don't worry, it's just a flesh wound.\n");
+           break;
+   case 2: printf("You should really stay away from things that kill you.\n");
+           break;
+   case 3: printf("That doesn't go there...\n");
+           break;
+   case 4: printf("That's gotta hurt!\n");     
+           break;
+   case 5: printf("My grandmother can take hits better than you!\n");     
+ }   
+}
+
+void successQuote()                   //quotes for successful attack
+{
+
+  switch ( rollDie(5,1) )             //roll one five-sided dice
+  {
+   case 1: printf("Huzzah!\n");
+           break;
+   case 2: printf("Whittle him down some more!\n");
+           break;    
+   case 3: printf("You might be the ONE\n");
+           break;
+   case 4: printf("That's great kid, don't get cocky...\n");
+           break;
+   case 5: printf("He couldn't repel an attack of that magnitude!\n");             
+  }  
+}
+
+void runQuote()                      //quotes for running (if it is included)
+{
+     
+ switch( rollDie(3,1) )              //roll one three-sided dice
+ {
+  case 1: printf("Sir Hacksalot: Get back here, you yellow bastard!\n");
+          break;
+  case 2: printf("Wow, you're more skittish than a deer\n");
+          break;
+  case 3: printf("Run little chicken, RUN!\n");      
+ }   
+}
+void endQuote( int e )
+{
+
+switch (e)
+ {
+  case 1: printf("\nCongraulations! You beat Sir Hacksalot!\n");   //if player wins
+          break;
+  case 2: printf("\nHere are your two coins for the ferryman.\n"); //if player loses
+          break;
+  case 3: printf("\nThank you for playing.\n\n");                  //just a generic end game statement (and yes that was intentional)       
+ }   
+}
+
+void welcome() //welcome message, and general information
+{
+  printf("Welcome to Battle Sim by the Fighting Mongooses aka Jeff, Derek, Jon\n\n");
+  printf("Before we get into the actual battle here are a few notes for the user:\n\n");
+  printf("(1) You either fight or die in the Sim.\n");
+  printf("    You will get a character to use, with a name of your choosing.\n");
+  printf("(2) There is a probablity that you can miss your target so be careful.\n");
+  printf("(3) You can choose one of two options: attack or defend.\n");
+  printf("(4) The last one standing wins the battle.\n");
+  printf("    Afterwards you can see how many times you've won.\n");
+  printf("(5) Finally have fun, this is a game after all.\n\n");
+  printf("Now that the rules are covered lets get started, shall we?\n\n");     
+}
+
+void makeChar ( charType *chr )  //make the player/enemy character
+
+{
+     (*chr).health = rollDie(20, 5) + 10;          //player will have 10-100 health
+     if ((*chr).health > MAXHEALTH)                //if you get more than 100
+        (*chr).health = MAXHEALTH;                 //set the value to the Max Health
+     (*chr).armorType = rollDie(5, 1);             //roll for armor
+     (*chr).armorPoints = rollDie(12, 4);          //roll for armor condition
+     (*chr).wpn1Type = rollDie(5, 1);              //roll for the first weapon
+     (*chr).wpn1Hit = rollDie(20, 5);              //roll for weapon damage
+     
+     return;
+}
+
+
+void printChar ( charType stat, armorType armor[], wepnType wep[] )              //print the character
+{
+     printf("Armor: %s", armor[stat.armorType].name);                            //print the character's armor
+     printf(", %d%% damage absorbtion, ", armor[stat.armorType].strength);       //show the damage absorbtion
+     printf(" with %d condition points.\n", stat.armorPoints);                   //show the condition
+     printf("First weapon: %s", wep[stat.wpn1Type].name);                        //print character's first weapon
+     printf(", %d%% damage, %d%% hit probability\n", wep[stat.wpn1Type].strength, wep[stat.wpn1Type].hitProb); //hit probability for first
+     printf("\n");
+}
+
+int rollDie ( int numSides, int numThrows ) //die generator
+//function: rolldie
+//pre: none
+//post: generates a value rolled from a die
+{
+   int i, d=0;
+   
+   do
+     {
+        d = d + rand() % numSides + 1;
+        i++;
+     } while (i < numThrows );
+   return d;
+}
+
+int attProb (int hitProb)
+//function: determines whether an attack was successful
+//pre: rollD20
+//post: hit or miss
+//      If the rolled value is less than hitProb, it's a hit
+{
+   int att;
+   
+   att = rollDie(100, 1);
+   if ( att < hitProb)
+      return hit;
+   else
+      return miss;
+}
+
+
+int weapDamage (int a)
+//function: weapDamage
+//pre: attProb = hit, weapon type
+//post: damage done by weapon to hitpoints
+{
+  int i;
+  switch ( a )
+    {
+       case 1: i=rollDie(4, 1);
+          break;
+       case 2: i=rollDie(6, 1);
+          break;
+       case 3: i=rollDie(12, 1);
+          break;
+       case 4: i=rollDie(12, 2);
+          break;
+       case 5: i=rollDie(12, 3);
+          break;
+       case 6: i=rollDie(12, 4);
+     }
+     return i;
+}
+
+char retry()
+//function:   Play again y/n
+//pre: 		User must answer 'y' or 'n'
+//post: 	Return user answer
+{
+   char ans;
+   do
+   {
+      printf("\nWould you like a new battle (Y)es or (N)o ");
+      scanf("%c", &ans);
+   }  while (tolower(ans) != 'y' && tolower(ans) != 'n');
+       
+   return tolower(ans);
+}
+
+int battle ( charType *attacker, charType *attacked, wepnType wpn[] )
+//function: conducts battle turn 
+//pre:      structures for attacker and attacked
+//post:     health points are decremented on hit, returns damage
+
+{
+   int damage;
+    
+   if (attProb(wpn[(*attacker).wpn1Type].hitProb) == hit)  // see if it's a hit
+   {
+   
+   // damage = 1 + damage roll * (1 - %armor); the 1+ is make sure a hit produces damage
+   
+      damage = 1 + (weapDamage( (*attacker).wpn1Type) * ( 1. - (*attacked).armorType / 100. ));
+      (*attacked).health = (*attacked).health - damage;
+      return damage;
+   }
+   return 0;
+}
+
+
+int main (void)
+{
+    int i;
+    int numWins=0;                               //keeps track of the wins
+    int numLosses=0;                             //keep track of the losses
+    int gameCount=0;                             //keep track of the games
+    charType player,                             //holds player data
+             enemy={"Sir Hacksalot"};            // init the enemy name
+    int damage;                            
+    char answer;
+    
+   armorType armor[6]=               // name, protection
+   {"none to speak of", 0,
+    "Leather", 5,
+    "Studded Leather", 10,
+    "Chain Mail", 25,
+    "Splint Mail", 50, 
+    "Field Plate", 75};
+    
+    wepnType weapon[6]=             // name, %damage per hit, hit prob
+    {"dagger", 10, 100,
+     "short sword", 15, 75,
+     "long sword", 25, 50,
+     "Zwielhander", 50, 50,
+     "Spear", 75, 50,
+     "battle axe", 75, 25};
+   
+    srand(time(NULL));              //seed rand number generator
+    
+    //Welcome message and a few rules including an inside joke
+    welcome();
+
+    printf("What name would you like to go by? "); //user inputs a name
+    scanf("%s", &player.name);                     //scans user input          
+
+    do
+    {
+       makeChar( &player);                        //create the player
+       makeChar( &enemy );                         //create sir hacksalot
+    
+    printf("%s has the following characteristics:\n", player.name); //player info
+    printChar( player, armor, weapon );
+    
+    printf("\n\n%s approaches.  You see that he has the following:\n", enemy.name); //enemy info
+    printChar ( enemy, armor, weapon );
+    printf("\nLet the fray begin!   \n\n"); //begin the battle 
+
+    do
+    {	
+       printf("%s stands with %d health points, %s %d.\n\n", player.name, player.health, enemy.name, enemy.health);
+       printf("\nDo you want to (1) attack or (2) defend? "); //commands. defend = run 
+       scanf("%d", &i);
+       putchar('\n');
+       if (i == 1)
+       {
+          printf("%s is on the offensive...\n", player.name);
+          damage=battle( &player, &enemy, weapon );
+          if(  damage > 0)
+          {
+             printf("A %d point hit.  ", damage);
+             successQuote();                     //if player hits gets a random success quote
+          }
+          else                                   
+             missQuote();                        //else gets a random miss
+          damage = battle( &enemy, &player, weapon );   
+          printf("\n%s is attacking!\n", enemy.name);
+          if( damage > 0 )
+          {
+             printf("A %d point hit.  ", damage);
+             hitQuote();                         //if player is attacked get random hit quote
+          }  
+          else
+             duckQuote();                        //else get random duck quote
+        }
+			
+
+    }   while ( i == 1  && enemy.health > 0 && player.health > 0 );
+        
+    if ( i == 2 ) //if user chooses defend they run (go figure)
+       runQuote();   
+       
+    if ( enemy.health <= 0 ) //if player wins gets the first end quote, increase number of wins
+       {
+          endQuote(1);
+          numWins++;
+       }
+    if ( player.health <= 0 )//if player loses gets the second end quote, increase number of losses
+       {
+          numLosses++;    
+          endQuote(2);
+       }
+       
+    gameCount++; //game count increases
+       
+    answer = retry(); //offer the user to retry 
+    }   while ( answer != 'n' );
+   
+    printf("Battle statistics were as follows: "); // print battle stats
+    printf("%s won %d out of %d battles.\n", player.name, numWins, gameCount);
+    endQuote(3); //player sees the third end quote
+ 
+    return 0; //generic return
+} 
